@@ -144,6 +144,7 @@ UPROGS=\
 	$U/_sh\
 	$U/_sleep\
 	$U/_stressfs\
+	$U/_time1\
 	$U/_usertests\
 	$U/_uptime\
 	$U/_grind\
