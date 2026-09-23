@@ -1,11 +1,13 @@
 #define SBRK_ERROR ((char *)-1)
 
 struct stat;
+struct rusage; // Add struct rusage to hold the cputime of the child process
 
 // system calls
 int fork(void);
 int exit(int) __attribute__((noreturn));
 int wait(int *);
+int wait2(int*, struct rusage*); //Add wait2 to get the cputime of the child process
 int pipe(int *);
 int write(int, const void *, int);
 int read(int, void *, int);

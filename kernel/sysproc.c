@@ -36,6 +36,19 @@ sys_wait(void)
   return kwait(p);
 }
 
+
+// wait2: like wait(), but also returns the child's
+// resource usage (cputime) through the second argument.
+uint64
+sys_wait2(void)
+{
+  uint64 status;   // user address to store exit status
+  uint64 rusage;   // user address to store struct rusage
+  argaddr(0, &status);
+  argaddr(1, &rusage);
+  return kwait2(status, rusage);
+}
+
 uint64
 sys_sbrk(void)
 {

@@ -5,6 +5,7 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
+#include "pstat.h" // struct rusage is defined in pstat.h
 
 struct cpu cpus[NCPU];
 
@@ -124,7 +125,7 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
-  p->cputime = 0;
+  p->cputime = 0; // Initialize cputime to 0 for the new process
 
   // Allocate a trapframe page.
   if ((p->trapframe = (struct trapframe *)kalloc()) == 0) {
@@ -419,7 +420,72 @@ kwait(uint64 addr)
   }
 }
 
-// Per-CPU process scheduler.
+// Like kwait(), but also copies the child's resource usage
+// (struct rusage) to user address raddr.
+int
+kwait2(uint64 addr, uint64 raddr)
+{
+  struct proc *pp;
+  int havekids, pid;
+  struct proc *p = myproc();
+
+  acquire(&wait_lock);
+
+  for (;;) {
+    // Scan through table looking for exited children.
+    havekids = 0;
+    for (pp = proc; pp < &proc[NPROC]; pp++) {
+      if (pp->parent == p) {
+        // make sure the child isn't still in exit() or swtch().
+        acquire(&pp->lock);
+
+        havekids = 1;
+        if (pp->state == ZOMBIE) {
+          // Found one.
+          pid = pp->pid;
+          if (addr != 0 &&
+              copyout(p->pagetable, p->sz, addr, (char *)&pp->xstate,
+                      sizeof(pp->xstate)) < 0) {
+            release(&pp->lock);
+            release(&wait_lock);
+            return -1;
+          }
+
+          // copy the child's cputime to the parent's rusage
+          struct rusage ru;
+          ru.cputime = pp->cputime; 
+          if (raddr != 0 &&
+              copyout(p->pagetable, p->sz, raddr, (char *)&ru,
+                      sizeof(ru)) < 0) { // Copy the rusage struct to user space
+            release(&pp->lock); // Release the child's lock before returning
+            release(&wait_lock); // Release the wait_lock before returning
+            return -1; 
+          }
+
+          pp->parent = 0;
+          freeproc(pp);
+          release(&pp->lock);
+          release(&wait_lock);
+          return pid;
+        }
+        release(&pp->lock);
+      }
+    }
+
+    // No point waiting if we don't have any children.
+    if (!havekids || killed(p)) {
+      release(&wait_lock);
+      return -1;
+    }
+
+    // Wait for a child to exit.
+    sleep_prepare(p); //DOC: wait-sleep
+    release(&wait_lock);
+    sleep();
+    acquire(&wait_lock);
+  }
+}
+
 // Each CPU calls scheduler() after setting itself up.
 // Scheduler never returns.  It loops, doing:
 //  - choose a process to run.
