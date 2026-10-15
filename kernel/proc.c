@@ -229,6 +229,7 @@ userinit(void)
   p->cwd = namei("/");
 
   p->state = RUNNABLE;
+  p->readytime = ticks; // Add save the time the process became RUNNABLE
 
   release(&p->lock);
 }
@@ -303,6 +304,7 @@ kfork(void)
 
   acquire(&np->lock);
   np->state = RUNNABLE;
+  np->readytime = ticks; // Add save the time the child became RUNNABLE
   release(&np->lock);
 
   return pid;
@@ -509,6 +511,7 @@ getprocs(uint64 addr)
     ps.size = p->sz;
     ps.ppid = p->parent ? p->parent->pid : 0; // init has no parent, so use 0
     ps.priority = p->priority; // Add priority so ps can print it
+    ps.readytime = p->readytime; // Add readytime so ps can calculate the age
     safestrcpy(ps.name, p->name, sizeof(ps.name));
     release(&p->lock); // Unlock before copyout
 
@@ -553,6 +556,7 @@ scheduler(void)
         // Switch to chosen process.  It is the process's job
         // to release its lock and then reacquire it
         // before jumping back to us.
+        p->readytime = ticks; // Add save the time the process became RUNNABLE
         p->state = RUNNING;
         c->proc = p;
         swtch(&c->context, &p->context);
@@ -608,6 +612,7 @@ yield(void)
   struct proc *p = myproc();
   acquire(&p->lock);
   p->state = RUNNABLE;
+  p->readytime = ticks; // Add save the time the process became RUNNABLE
   sched();
   release(&p->lock);
 }
@@ -694,6 +699,7 @@ wakeup(void *chan)
       // go to sleep, also set it back to RUNNING.
       if (p->state == SLEEPING) {
         p->state = RUNNABLE;
+        p->readytime = ticks; // Update the ready time when process becomes RUNNABLE
       }
     }
     release(&p->lock);
@@ -715,6 +721,7 @@ kkill(int pid)
       if (p->state == SLEEPING) {
         // Wake process from sleep().
         p->state = RUNNABLE;
+        p->readytime = ticks; // Add save the time the process became RUNNABLE
       }
       release(&p->lock);
       return 0;

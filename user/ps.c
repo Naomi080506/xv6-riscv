@@ -21,13 +21,18 @@ main(int argc, char **argv)
   if (nprocs < 0)
     exit(-1);
 
-  printf("pid\tstate\t\tsize\tpriority\tppid\tname\n"); // Add priority column
+  uint now = uptime(); // Add get the current time to calculate the age
+
+  printf("pid\tstate\t\tsize\tage\tpriority\tppid\tname\n"); // Add age and priority columns
   for (i=0; i<nprocs; i++) {
     state = states[uproc[i].state];
-    printf("%d\t%s\t%ld\t%d\t\t%d\t%s\n", uproc[i].pid, state,
-                   uproc[i].size, uproc[i].priority, uproc[i].ppid, uproc[i].name); // Fix %l to %ld since size is uint64, and add priority
+    uint age = 0;
+    if (uproc[i].state == RUNNABLE)
+      age = now - uproc[i].readytime; // Add age = current time - readytime, only for RUNNABLE processes
+    printf("%d\t%s\t%ld\t%d\t%d\t\t%d\t%s\n", uproc[i].pid, state,
+                   uproc[i].size, age, uproc[i].priority, uproc[i].ppid, uproc[i].name); // Fix %l to %ld since size is uint64, and add age and priority
   }
-
+  
   exit(0);
 }
 
