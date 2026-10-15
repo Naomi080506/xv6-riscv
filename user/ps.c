@@ -21,11 +21,11 @@ main(int argc, char **argv)
   if (nprocs < 0)
     exit(-1);
 
-  printf("pid\tstate\t\tsize\tppid\tname\n");
+  printf("pid\tstate\t\tsize\tpriority\tppid\tname\n"); // Add priority column
   for (i=0; i<nprocs; i++) {
     state = states[uproc[i].state];
-        printf("%d\t%s\t%ld\t%d\t%s\n", uproc[i].pid, state,   // Fix %l to %ld since size is uint64
-                   uproc[i].size, uproc[i].ppid, uproc[i].name);
+    printf("%d\t%s\t%ld\t%d\t\t%d\t%s\n", uproc[i].pid, state,
+                   uproc[i].size, uproc[i].priority, uproc[i].ppid, uproc[i].name); // Fix %l to %ld since size is uint64, and add priority
   }
 
   exit(0);

@@ -124,6 +124,7 @@ allocproc(void)
 
 found:
   p->pid = allocpid();
+    p->priority = 0; // Add priority starts at 0, so init starts with priority 0
   p->state = USED;
   p->cputime = 0; // Initialize cputime to 0 for the new process
 
@@ -276,6 +277,7 @@ kfork(void)
     return -1;
   }
   np->sz = p->sz;
+  np->priority = p->priority; // Add the child inherits the parent's priority
 
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
@@ -506,6 +508,7 @@ getprocs(uint64 addr)
     ps.state = p->state;
     ps.size = p->sz;
     ps.ppid = p->parent ? p->parent->pid : 0; // init has no parent, so use 0
+    ps.priority = p->priority; // Add priority so ps can print it
     safestrcpy(ps.name, p->name, sizeof(ps.name));
     release(&p->lock); // Unlock before copyout
 

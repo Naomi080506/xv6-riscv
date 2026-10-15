@@ -10,6 +10,8 @@ int exit(int) __attribute__((noreturn));
 int wait(int *);
 int wait2(int*, struct rusage*); //Add wait2 to get the cputime of the child process
 int getprocs(struct pstat*); //Add getprocs to get the info of all the processes for ps
+int getpriority(void); // Add getpriority to get the priority of the current process
+int setpriority(int);  // Add setpriority to set the priority of the current process
 int pipe(int *);
 int write(int, const void *, int);
 int read(int, void *, int);

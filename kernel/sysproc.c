@@ -128,8 +128,34 @@ sys_uptime(void)
 // and pass it to getprocs() in proc.c that does the real work
 uint64
 sys_getprocs(void)
+
 {
   uint64 addr;
   argaddr(0, &addr); // Get the address of the user's pstat array
   return getprocs(addr); // Return the number of processes, or -1 if it fails
+}
+
+// Add getpriority system call to return the priority of the current process
+uint64
+sys_getpriority(void)
+{
+  return myproc()->priority;
+}
+
+// Add setpriority system call to set the priority of the current process
+// Returns 0 if it worked, or -1 if the priority is not between 0 and 49
+uint64
+sys_setpriority(void)
+{
+  int priority;
+  struct proc *p = myproc();
+
+  argint(0, &priority); // Get the new priority from the user
+  if(priority < 0 || priority > 49)
+    return -1; // Users can only set priorities 0 to 49
+
+  acquire(&p->lock); // Lock so the scheduler can't read it while we change it
+  p->priority = priority;
+  release(&p->lock);
+  return 0;
 }

@@ -45,3 +45,5 @@ entry("uptime");
 entry("sync");
 entry("wait2"); # Added wait2, _syscall entry
 entry("getprocs"); # Add getprocs to make the user stub that jumps into the kernel
+entry("getpriority"); # Add getpriority user stub
+entry("setpriority"); # Add setpriority user stub

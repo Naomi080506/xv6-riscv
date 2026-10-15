@@ -23,3 +23,5 @@
 #define SYS_sync   22
 #define SYS_wait2  23 // Added wait2 system call number
 #define SYS_getprocs 24 // Add the system call number for getprocs
+#define SYS_getpriority 25 // Add the system call number for getpriority
+#define SYS_setpriority 26 // Add the system call number for setpriority
