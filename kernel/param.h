@@ -12,3 +12,7 @@
 #define FSSIZE      2000              // size of file system in blocks
 #define MAXPATH     128               // maximum file path name
 #define USERSTACK   1                 // user stack pages
+// Add scheduler options, pick one with SCHEDULER (compile-time)
+#define SCHED_RR       0   // round-robin (original xv6)
+#define SCHED_PRIORITY 1   // priority-based
+#define SCHEDULER SCHED_PRIORITY
