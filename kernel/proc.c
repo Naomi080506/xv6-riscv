@@ -486,6 +486,41 @@ kwait2(uint64 addr, uint64 raddr)
   }
 }
 
+// Add getprocs to fill the user's array with the info of each process
+// and return how many processes there are
+int
+getprocs(uint64 addr)
+{
+  struct proc *p;
+  struct pstat ps; // Holds the info of one process before copying it to the user
+  int n = 0;       // Counts how many processes we copied
+
+  acquire(&wait_lock); // Lock wait_lock so p->parent can't change while we read it
+  for(p = proc; p < &proc[NPROC]; p++){
+    acquire(&p->lock); // Lock the process so its info can't change while we read it
+    if(p->state == UNUSED || p->state == USED){
+      release(&p->lock); // Skip empty slots and processes that are still being created
+      continue;
+    }
+    ps.pid = p->pid;
+    ps.state = p->state;
+    ps.size = p->sz;
+    ps.ppid = p->parent ? p->parent->pid : 0; // init has no parent, so use 0
+    safestrcpy(ps.name, p->name, sizeof(ps.name));
+    release(&p->lock); // Unlock before copyout
+
+    // Copy this process's info into the user's array at position n
+      if(either_copyout(1, addr + n*sizeof(ps), &ps, sizeof(ps)) < 0){ // 1 = copy to user space
+      release(&wait_lock);
+      return -1; // The user's address was bad
+    }
+    n++;
+  }
+  release(&wait_lock);
+  return n; // Return the number of processes
+}
+
+
 // Each CPU calls scheduler() after setting itself up.
 // Scheduler never returns.  It loops, doing:
 //  - choose a process to run.

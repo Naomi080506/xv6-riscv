@@ -44,3 +44,4 @@ entry("pause");
 entry("uptime");
 entry("sync");
 entry("wait2"); # Added wait2, _syscall entry
+entry("getprocs"); # Add getprocs to make the user stub that jumps into the kernel

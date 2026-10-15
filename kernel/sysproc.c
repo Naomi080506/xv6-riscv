@@ -118,8 +118,18 @@ sys_uptime(void)
 {
   uint xticks;
 
-  acquire(&tickslock);
-  xticks = ticks;
-  release(&tickslock);
-  return xticks;
+  acquire(&tickslock);   // Lock ticks so the timer can't change it while we read it
+  xticks = ticks;        // Save the current number of ticks since boot
+  release(&tickslock);   // Unlock ticks so the timer can keep updating it
+  return xticks;         // Return the ticks to the user
+}
+
+// Add getprocs system call to get the address of the user's array
+// and pass it to getprocs() in proc.c that does the real work
+uint64
+sys_getprocs(void)
+{
+  uint64 addr;
+  argaddr(0, &addr); // Get the address of the user's pstat array
+  return getprocs(addr); // Return the number of processes, or -1 if it fails
 }

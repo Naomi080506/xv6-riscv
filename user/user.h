@@ -2,12 +2,14 @@
 
 struct stat;
 struct rusage; // Add struct rusage to hold the cputime of the child process
+struct pstat; // Add to tell the compiler struct pstat exists so the getprocs prototype can use it
 
 // system calls
 int fork(void);
 int exit(int) __attribute__((noreturn));
 int wait(int *);
 int wait2(int*, struct rusage*); //Add wait2 to get the cputime of the child process
+int getprocs(struct pstat*); //Add getprocs to get the info of all the processes for ps
 int pipe(int *);
 int write(int, const void *, int);
 int read(int, void *, int);

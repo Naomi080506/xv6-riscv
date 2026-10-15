@@ -22,3 +22,4 @@
 #define SYS_close  21
 #define SYS_sync   22
 #define SYS_wait2  23 // Added wait2 system call number
+#define SYS_getprocs 24 // Add the system call number for getprocs
