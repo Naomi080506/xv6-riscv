@@ -526,7 +526,20 @@ getprocs(uint64 addr)
   return n; // Return the number of processes
 }
  
- 
+// Add aging: effective priority = priority + (ticks waiting / AGINGRATE), max MAXEFFPRIORITY
+static int
+effpriority(struct proc *p)
+{
+#if AGING
+  int eff = p->priority + (ticks - p->readytime) / AGINGRATE;
+  if (eff > MAXEFFPRIORITY)
+    eff = MAXEFFPRIORITY;
+  return eff;
+#else
+  return p->priority; // Add without aging, just use the normal priority
+#endif
+}
+
 // Each CPU calls scheduler() after setting itself up.
 // Scheduler never returns.  It loops, doing:
 //  - choose a process to run.
@@ -557,9 +570,9 @@ scheduler(void)
     for (int i = 1; i <= NPROC; i++) {
       p = &proc[(last + i) % NPROC]; // Add start searching after the last process that ran, so ties take turns
       acquire(&p->lock);
-      if (p->state == RUNNABLE && p->priority > bestprio) {
-        best = p;               // Add this is the highest priority so far
-        bestprio = p->priority;
+      if (p->state == RUNNABLE && effpriority(p) > bestprio) { // Add use the effective priority (with aging)
+        best = p; // Add this is the highest priority so far
+        bestprio = effpriority(p);
       }
       release(&p->lock);
     }
@@ -609,6 +622,8 @@ scheduler(void)
 #endif
   }
 } 
+
+
 // Switch to scheduler.  Must hold only p->lock
 // and have changed proc->state. Saves and restores
 // intena because intena is a property of this

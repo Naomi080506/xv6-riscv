@@ -16,3 +16,7 @@
 #define SCHED_RR       0   // round-robin (original xv6)
 #define SCHED_PRIORITY 1   // priority-based
 #define SCHEDULER SCHED_PRIORITY
+
+#define MAXEFFPRIORITY 99  // Add highest effective priority
+#define AGINGRATE 10       // Add gain 1 priority point for every 10 ticks waiting
+#define AGING 0            // Add 1 = aging on, 0 = aging off
